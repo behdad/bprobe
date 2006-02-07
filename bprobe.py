@@ -107,10 +107,11 @@ def compile (infile, outfile):
 
 	# Make sure outfile is not in the way.
 	#
-	try:
-		os.unlink (outfile)
-	except OSError, e:
-		__fail ("%s: %s" % (outfile, e.strerror))
+	if os.path.isfile (outfile):
+		try:
+			os.unlink (outfile)
+		except OSError, e:
+			__fail ("%s: %s" % (outfile, e.strerror))
 
 	# Initialize fallback metadata.
 	#
@@ -147,7 +148,7 @@ def compile (infile, outfile):
 	if errs:
 		__fail (errs)
 	
-	if not os.path.exists (outfile):
+	if not os.path.isfile (outfile):
 		__fail ("%s: compiler did not produce expected output file" % outfile)
 	
 	# Chmod it back from executable.
@@ -195,7 +196,7 @@ def get_compiled (probe):
 	# header files, the .so file is up to date, do not recompile.
 	#
 	if not force_compile and \
-	   os.path.exists (so) and \
+	   os.path.isfile (so) and \
 	   os.path.getmtime (so) >= os.path.getmtime (probe) and \
 	   (not os.path.isfile (bprobe_h) or not os.path.isfile (bprobe_private_h) or \
 	    (os.path.getmtime (so) >= os.path.getmtime (bprobe_h) and \

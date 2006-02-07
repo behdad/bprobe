@@ -3,7 +3,7 @@
 #include <fontconfig/fontconfig.h>
 
 #include <bprobe.h>
-PKG_CONFIG_CFLAGS (fontconfig)
+PKG_CONFIG (fontconfig)
 
 PROBE
 FcFontSet  *
