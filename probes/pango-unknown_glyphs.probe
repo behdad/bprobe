@@ -1,0 +1,15 @@
+/* vim:set filetype=c: -*-mode:c-*-*/
+
+#define PANGO_ENABLE_ENGINE 1
+#include <pango/pangofc-font.h>
+
+#include "bprobe.h"
+PKG_CONFIG_CFLAGS (pangoft2)
+DEBUG (2)
+
+PROBE
+guint       pango_fc_font_get_glyph         (PangoFcFont *font,
+                                             gunichar wc)
+{
+  return SUPER(pango_fc_font_get_unknown_glyph) (font, wc);
+}

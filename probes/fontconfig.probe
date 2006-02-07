@@ -1,0 +1,29 @@
+/* vim:set filetype=c: -*-mode:c-*-*/
+
+#include <fontconfig/fontconfig.h>
+
+#include <bprobe.h>
+PKG_CONFIG_CFLAGS (fontconfig)
+
+PROBE
+FcFontSet  *
+FcFontSort (FcConfig  *config, FcPattern *p, FcBool trim,
+	    FcCharSet **csp, FcResult *result)
+{
+	LOG_FUNC ("<begin>");
+	FcPatternPrint (p);
+	LOG_FUNC ("<end>");
+
+	return SUPER(FcFontSort) (config, p, trim, csp, result);
+}
+
+PROBE
+FcFontSet  *
+FcFontList  (FcConfig  *config, FcPattern *p, FcObjectSet *os)
+{
+	LOG_FUNC ("<begin>");
+	FcPatternPrint (p);
+	LOG_FUNC ("<end>");
+
+	return SUPER(FcFontList) (config, p, os);
+}

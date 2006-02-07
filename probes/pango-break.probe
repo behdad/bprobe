@@ -1,0 +1,35 @@
+/* vim:set filetype=c: -*-mode:c-*-*/
+
+#define PANGO_ENABLE_ENGINE 1
+#include <pango/pango.h>
+
+#include <bprobe.h>
+PKG_CONFIG_CFLAGS (pango)
+
+int break_count;
+
+BEGIN
+{
+	break_count = 0;
+}
+
+END
+{
+	LOG ("pango_break called %d times", break_count);
+}
+
+PROBE
+void                 pango_break          (const gchar   *text,
+					   int            length,
+					   PangoAnalysis *analysis,
+					   PangoLogAttr  *attrs,
+					   int            attrs_len)
+{
+	break_count++;
+
+	return SUPER(pango_default_break) (text,
+					   length,
+					   analysis,
+					   attrs,
+					   attrs_len);
+}
