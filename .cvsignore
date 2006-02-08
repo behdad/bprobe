@@ -1,2 +1,3 @@
 *.probe.so
+*.probe.main
 *.pyc
