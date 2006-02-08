@@ -1,5 +1,9 @@
 2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
 
+	* bprobe.h, bprobe-private.h, bprobe.py: Define MAIN and --main.
+
+2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+
 	* bprobe.h (SUPER, FUNC): Improve docs.
 
 	* bprobe.h (DEBUG), bprobe-private.h: Add another level of error

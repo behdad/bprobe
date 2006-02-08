@@ -13,3 +13,11 @@ guint       pango_fc_font_get_glyph         (PangoFcFont *font,
 {
   return SUPER(pango_fc_font_get_unknown_glyph) (font, wc);
 }
+
+MAIN (void)
+{
+  PangoGlyph glyph = pango_fc_font_get_glyph (NULL, 'A');
+  LOG ("Got glyph for character 'A' from font NULL: 0x%08X", glyph);
+
+  return glyph & PANGO_GLYPH_UNKNOWN_FLAG ? 0 : 1;
+}

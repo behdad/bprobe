@@ -21,6 +21,11 @@
 
 #define BPROBE_BEGIN		BPROBE_UNIQUE_ATTRIBUTED_FUNC (constructor, begin)
 #define BPROBE_END		BPROBE_UNIQUE_ATTRIBUTED_FUNC (destructor,  end)
+#ifdef BPROBE
+#define BPROBE_MAIN		BPROBE_ATTRIBUTE (unused) static int bprobe_main
+#else
+#define BPROBE_MAIN		BPROBE_PROBE int main
+#endif
 
 #define BPROBE_LOG		bprobe_log
 #define BPROBE_DIE		bprobe_die
@@ -95,24 +100,24 @@
 
 /* Prototypes */
 
-BPROBE_ATTRIBUTE  (unused)
+BPROBE_ATTRIBUTE (unused)
 static int bprobe_debug = 1;
 
-BPROBE_ATTRIBUTE  (unused)
+BPROBE_ATTRIBUTE (unused)
 static int bprobe_sym_not_found(void);
 
-BPROBE_ATTRIBUTE  (unused)
+BPROBE_ATTRIBUTE (unused)
 static void bprobe_log   (const char *fmt, ...);
-BPROBE_ATTRIBUTE  (unused)
+BPROBE_ATTRIBUTE (unused)
 static void bprobe_log_n (const char *fmt, ...);
-BPROBE_ATTRIBUTE  (unused)
+BPROBE_ATTRIBUTE (unused)
 static void bprobe_log_q (const char *fmt, ...);
 
-BPROBE_ATTRIBUTE  (unused)
-BPROBE_ATTRIBUTE  (noreturn)
+BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE (noreturn)
 static void bprobe_die   (const char *fmt, ...);
-BPROBE_ATTRIBUTE  (unused)
-BPROBE_ATTRIBUTE  (noreturn)
+BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE (noreturn)
 static void bprobe_die_q (const char *fmt, ...);
 
 
@@ -188,6 +193,10 @@ bprobe_sym_not_found (void)
 #define BPROBE_MAGIC_BEGIN(token)	{{token{X
 #define BPROBE_MAGIC_END(token)		X}token}}
 #define BPROBE_METADATA(token, value)	BPROBE_MAGIC_BEGIN(token){value}BPROBE_MAGIC_END(token)
+
+#ifndef BPROBE
+#define _PKG_CONFIG_CFLAGS		_PKG_CONFIG
+#endif
 
 /* A symbol we check in the output to make sure preprocessor did
  * its job...

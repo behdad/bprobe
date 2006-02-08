@@ -57,7 +57,7 @@ cc = os.getenv ('CC') or 'gcc'
 cpp = os.getenv ('CPP') or 'gcc -E'
 pkg_config = os.getenv ('PKG_CONFIG') or 'pkg-config'
 
-def get_metadata (probe, metadata = None):
+def get_metadata (probe, metadata = None, standalone = False):
 	"""Return a dictionary containing the metadata of a probe source."""
 
 	if not metadata:
@@ -75,7 +75,9 @@ def get_metadata (probe, metadata = None):
 	# Construct the preprocessor command.
 	#
 	cmd = cpp.split ()
-	cmd.extend (['-nostdinc', '-I'+include_dir, '-DBPROBE_GATHER_METADATA'])
+	if not standalone:
+		cmd.extend (['-DBPROBE'])
+	cmd.extend (['-DBPROBE_GATHER_METADATA', '-nostdinc', '-I'+include_dir])
 	cmd.extend (['-x', 'c', probe])
 
 	# Run the preprocessor.
@@ -102,8 +104,8 @@ def __pkg_config (list, what = '--cflags --libs'):
 	else:
 		return ''
 
-def compile (infile, outfile):
-	"""Compile probe source into shared object."""
+def compile (infile, outfile, standalone = False):
+	"""Compile probe."""
 
 	# Make sure outfile is not in the way.
 	#
@@ -119,7 +121,7 @@ def compile (infile, outfile):
 
 	# Get metadata out of the probe source.
 	#
-	metadata = get_metadata (infile, metadata)
+	metadata = get_metadata (infile, metadata, standalone)
 
 	# Construct the compile command.
 	#
@@ -128,13 +130,14 @@ def compile (infile, outfile):
 
 	cmd  = [compiler]
 
-	cmd.append ('-I'+include_dir)
 	cmd.append (__md_item (metadata, '_COMPILER_FLAGS'))
 	cmd.append (__pkg_config (__md_item (metadata, '_PKG_CONFIG')))
 	cmd.append (__pkg_config (__md_item (metadata, '_PKG_CONFIG_CFLAGS'), '--cflags'))
 	cmd.append (__pkg_config (__md_item (metadata, '_PKG_CONFIG_LIBS'), '--libs'))
 
-	cmd += ['-shared', '-o', outfile, '-x', language, infile]
+	if not standalone:
+		cmd.extend (['-DBPROBE', '-shared'])
+	cmd.extend (['-ldl', '-I'+include_dir, '-o', outfile, '-x', language, infile])
 
 	cmd = [item for item in cmd if len(item)]
 	cmd = ' '.join (cmd)
@@ -151,23 +154,31 @@ def compile (infile, outfile):
 	if not os.path.isfile (outfile):
 		__fail ("%s: compiler did not produce expected output file" % outfile)
 	
-	# Chmod it back from executable.
+	# Chmod it back from executable, if not standalone.
 	#
-	os.chmod (outfile, os.stat (infile).st_mode)
+	if not standalone:
+		os.chmod (outfile, os.stat (infile).st_mode)
 
 
 
 suffixes = ['.probe', '.bprobe']
 sosuffix = '.so'
-def get_compiled (probe):
+mainsuffix = '.main'
+
+def get_compiled (probe, forced = False, standalone = False):
 	"""Returns the file-name of a compiled probe, given an input file name."""
 
+	if standalone:
+		suffix = mainsuffix
+	else:
+		suffix = sosuffix
+
 	# If a file exists, does not end with any bprobe suffix, and ends
-	# with .so suffix or contains .so. in it, it's a compiled probe
-	# (or another shared library, just return it.
+	# with "suffix" or contains "suffix." in it, it's a compiled probe
+	# (or another shared library, whatever), just return it...
 	#
 	if os.path.isfile (probe) and \
-	   (probe.endswith (sosuffix) or probe.find (sosuffix+'.') != -1) and \
+	   (probe.endswith (suffix) or probe.find (suffix+'.') != -1) and \
 	   not [s for s in suffixes if probe.endswith (s)]:
 
 		return probe
@@ -186,117 +197,145 @@ def get_compiled (probe):
 	if not os.path.isfile (probe):
 		__fail ("%s: probe not found" % probe)
 	
-	so = probe + sosuffix
+	outfile = probe + suffix
+
+	bprobe_py = __file__
 	bprobe_h = os.path.join (include_dir, 'bprobe.h')
 	bprobe_private_h = os.path.join (include_dir, 'bprobe-private.h')
 
-	# If not forced, and the .so file for the probe exists, and
-	# the .so file is not older than the probe, either the bprobe
-	# headers are not found or .os is not older than any of the
-	# header files, the .so file is up to date, do not recompile.
+	# If not forced, and the outfile file for the probe exists, and
+	# the outfile file is not older than the probe, either the bprobe
+	# headers are not found or outfile is not older than any of the
+	# header files and the compiler, the outfile file is up to date,
+	# do not recompile.
 	#
-	if not force_compile and \
-	   os.path.isfile (so) and \
-	   os.path.getmtime (so) >= os.path.getmtime (probe) and \
+	if not forced and \
+	   os.path.isfile (outfile) and \
+	   os.path.getmtime (outfile) >= os.path.getmtime (probe) and \
 	   (not os.path.isfile (bprobe_h) or not os.path.isfile (bprobe_private_h) or \
-	    (os.path.getmtime (so) >= os.path.getmtime (bprobe_h) and \
-	     os.path.getmtime (so) >= os.path.getmtime (bprobe_private_h))):
+	    (os.path.getmtime (outfile) >= os.path.getmtime (bprobe_py) and \
+	     os.path.getmtime (outfile) >= os.path.getmtime (bprobe_h) and \
+	     os.path.getmtime (outfile) >= os.path.getmtime (bprobe_private_h))):
 
-		__log ("%s: up to date, not recompiling" % so)
-		return so
+		__log ("%s: up to date, not recompiling" % outfile)
+		return outfile
 	
 	# If still here, compile it.
 	#
-	compile (probe, so)
+	compile (probe, outfile, standalone)
 
-	return so
+	return outfile
 
 
 
-def run (probes, *cmd_args):
-	"""Run a command with probes set and arguments, compiling the probes if needed."""
+def run (probes, cmd_args, forced = False, standalone = False, shared = True):
+	"""Compile probes if needed or forced, and run the command with the probes set, if any.  If no shared compilation is set, no command should be passed."""
 
-	# Get .so files for probes.
-	#
-	probes = [get_compiled (probe) for probe in probes]
+	if standalone:
+		# Compile standalones first.
+		#
+		[get_compiled (probe, forced, True) for probe in probes]
 
-	# Append $LD_PRELOAD.
-	#
-	ld_preload = os.getenv ('LD_PRELOAD')
-	probe_preload = ' '.join (probes)
-	if ld_preload:
-		probe_preload += ' ' + ld_preload
-	if probe_preload:
-		os.putenv ('LD_PRELOAD', probe_preload)
+	if shared:
 
-	# If command set, run it.
-	if cmd_args:
-		cmd = cmd_args[0]
-		try:
-			os.execvp (cmd, cmd_args)
-		except OSError, e:
-			__fail ("%s: %s" % (cmd, e.strerror))
+		# Get .so files for probes.
+		#
+		probes = [get_compiled (probe, forced, False) for probe in probes]
+
+		# If command set, run it.
+		if cmd_args:
+
+			# Append $LD_PRELOAD.
+			#
+			ld_preload = os.getenv ('LD_PRELOAD')
+			probe_preload = ' '.join (probes)
+			if ld_preload:
+				probe_preload += ' ' + ld_preload
+			if probe_preload:
+				os.putenv ('LD_PRELOAD', probe_preload)
+
+			cmd = cmd_args[0]
+			try:
+				os.execvp (cmd, cmd_args)
+			except OSError, e:
+				__fail ("%s: %s" % (cmd, e.strerror))
+
+	elif cmd_args:
+		__fail ('cannot run command with standalone probes')
+
 
 exitcode = 126
 self = 'bprobe'
 include_dir = None
 verbose = False
-force_compile = False
 
 def main (args):
 
-	"""Usage: bprobe [OPTION]... PROBE[,PROBE]... [CMD [ARGS]...]
-or:    bprobe [OPTION]... [PROBE]... -- [CMD [ARGS]...]
+	"""Usage: bprobe [OPTION]... [PROBE]... -- [CMD [ARGS]...]
 Run command with one or more probes set.
 
   -h, --help        Show this usage info
-  -f, --force       Force recompilation of probes
+  -c, --compile     Compile probes (default action)
+  -m, --main        Make standalone applications from probes.  This changes
+                    the default action. Use --compile to compile probes still.
+  -f, --force       Force recompilation even if outputs are up to date
   -v, --verbose     Be a bit more talkative
 
 Report bugs to <behdad@gnome.org>"""
 
 	# Initialized include dir, etc.
 	#
-	global self, dir, include_dir
-	self = os.path.basename (args[0])
+	global dir, include_dir
 	dirname = os.path.dirname (args[0])
 	if not include_dir:
 		include_dir = dirname
 	del args[0]
 
-	# Parse options
+	forced = False
+	standalone = False
+	shared = False
+
+	# Parse options.
 	#
 	if not args:
-		print >>sys.stderr, bprobe_main.__doc__
+		print >>sys.stderr, main.__doc__
 		sys.exit (exitcode)
 	try:
-		opts, args = getopt.getopt (args, 'hvVf', ['help', 'verbose', 'force'])
+		opts, args = getopt.getopt (args, 'hcmvVf', ['help', 'compile', 'main', 'verbose', 'force'])
 	except getopt.GetoptError, e:
 		__fail (e)
 	for opt, value in opts:
 		if opt in ['-h', '--help']:
-			print bprobe_main.__doc__
+			print main.__doc__
 			sys.exit ()
+		elif opt in ['-c', '--compile']:
+			shared = True
+		elif opt in ['-m', '--main']:
+			standalone = True
 		elif opt in ['-v', '-V', '--verbose']:
 			global verbose
 			verbose = True
 		elif opt in ['-f', '--force']:
-			global force_compile
-			force_compile = True
+			forced = True
 
-	# Split remaining arguments into probes and cmd/args
+	# Default action.
+	#
+	if not standalone:
+		shared = True
+
+	# Split remaining arguments into probes and cmd/args.
 	#
 	if '--' in args:
 		i = args.index ('--')
 		probes = args[:i]
 		cmd_args = args[i+1:]
 	else:
-		probes = args[0].split (',')
-		cmd_args = args[1:]
+		probes = args
+		cmd_args = None
 	
 	# Run!
 	#
-	run (probes, *cmd_args)
+	run (probes, cmd_args, forced=forced, standalone=standalone, shared=shared)
 
 
 if __name__ == '__main__':

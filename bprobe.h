@@ -33,7 +33,10 @@
 /* Space-separated list of packages you want to add to both --cflags and --lib */
 #define PKG_CONFIG(list)	BPROBE_METADATA (_PKG_CONFIG, list)
 
-/* Space-separated list of packages you want to add to --cflags only */
+/* Space-separated list of packages you want to add to --cflags only.
+ * When compiling into an standalone application, this behaves like
+ * PKG_CONFIG.
+ */
 #define PKG_CONFIG_CFLAGS(list)	BPROBE_METADATA (_PKG_CONFIG_CFLAGS, list)
 
 /* Space-separated list of packages you want to add to --libs only */
@@ -78,7 +81,7 @@
 
 
 /* Mark a function as a probe.
- * Should come just before the function return type.
+ * Should come just before the function definition/declaration.
  */
 #define PROBE			BPROBE_PROBE
 
@@ -117,6 +120,14 @@
  */
 #define END			BPROBE_END
 
+/* Use this instead of 'int main' if you want to define a
+ * main function in your probe.  This function will be
+ * ignored when compiling as a probe, but can also be used
+ * to compile your probe as an standalone application.
+ * For example, you may define a test suite for you probe
+ * in this function.
+ */
+#define MAIN			BPROBE_MAIN
 
 
 /* Log a message to stderr, printf style
