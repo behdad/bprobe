@@ -51,14 +51,22 @@
 
 
 /* Tune debugging messages reported by bprobe.
+ *
  * Zero turns off all messages by bprobe, including
  * critical warning.
- * One is the normal, you don't see anything other
+ *
+ * One is the default, you don't see anything other
  * than messages indicating that you definitely did
  * something wrong. (default)
- * Two also prints out warnings on things that may
+ *
+ * Two also prints out errors that are after-effects
+ * of an already reported error.  Like erring every
+ * time a missing symbol is called.
+ *
+ * Three turns on warnings on things that may
  * be an error on your side, but may as well be a 
- * valid but less common usage.
+ * valid but less common usage, like when you call
+ * a SUPER(X) in a PROBE Y, where X != Y.
  */
 #define DEBUG(status)		BPROBE_DEBUG(status)
 
@@ -74,15 +82,27 @@
  */
 #define PROBE			BPROBE_PROBE
 
-/* Accessor to call the default handler of a probe.
- * Means, a function not defined in the probe file.
+/* Accessor to call (or get) a function that is already
+ * prototyped.  The symbol is resolved dynamically and
+ * when the expression is evaluated, so it cannot make
+ * a run-time linker error.  Instead, if the symbol is
+ * not found, a critical warning is printed and the
+ * function 'int bprobe_sym_not_found (void)' is
+ * returned, which is a function always returns 0.
+ * You can compare the returned value of SUPER with this
+ * symbol to check whether this has happened.
+ *
+ * This is most useful to call the default handler of a
+ * probe, or call from other probes in the same bprobe module
+ * when you do not want to trigger its probe.
  */
 #define SUPER(func)		BPROBE_SUPER(func)
 
-/* Accessor to get a function of specified type (or
- * type like the object passed as type) and given
- * name.  If type is a function, it should be prefixed
- * by ampersand.
+/* Accessor to call (or get) a function of specified type
+ * (or type similar to the object passed as type) and given
+ * name as a string.  If type is a function, it should
+ * be prefixed by ampersand.  The type is only used to
+ * cast the return value to the proper type.
  */
 #define FUNC(type, name)	BPROBE_FUNC(type, name)
 

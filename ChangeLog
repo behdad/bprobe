@@ -1,3 +1,15 @@
+2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+
+	* bprobe.h (SUPER, FUNC): Improve docs.
+
+	* bprobe.h (DEBUG), bprobe-private.h: Add another level of error
+	reporting.
+
+	* bprobe-private.h: Err on no-gcc only during compilation, not
+	preprocessing.
+
+	* TODO: Add DEPENDS(list).
+
 2006-02-7  Behdad Esfahbod  <behdad@gnome.org>
 
 	* bprobe.py: Do not try to unlink if the file is not there.

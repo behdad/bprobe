@@ -11,10 +11,6 @@
 #ifndef _BPROBE_PRIVATE_H
 #define _BPROBE_PRIVATE_H
 
-#ifndef __GNUC__
-#error You need gcc to run bprobe
-#endif
-
 /* The public interface */
 
 #define BPROBE_DEBUG(status)	BEGIN { bprobe_debug = (status); }
@@ -40,13 +36,13 @@
 #define BPROBE_STRINGIZE0(x)	#x
 #define BPROBE_JOIN0(x,y)	x##y
 
-#define BPROBE_FUNC_GET(prototype, symname, err)			\
+#define BPROBE_FUNC_GET(prototype, symstring, err)			\
 	({								\
 	  typedef __typeof__((prototype)) _bprobe_type;			\
 	  static _bprobe_type _bprobe_sym_orig = NULL;			\
-	  const char _bprobe_func[] = (symname);			\
+	  const char _bprobe_func[] = (symstring);			\
 	  if (!_bprobe_sym_orig) {					\
-	    if (err && bprobe_debug >= 2 &&				\
+	    if (err && bprobe_debug >= 3 &&				\
 	        strcmp (__func__, _bprobe_func))			\
 	      LOG_FUNC ("bprobe WARNING:\n"				\
 			"Looked up symbol '%s' is different\n"		\
@@ -74,7 +70,7 @@
 
 
 
-/* Probes should only export functions marked as PROBE */
+/* Probes should only export symbols marked as PROBE */
 
 #pragma GCC visibility push(hidden)
 
@@ -159,7 +155,8 @@ static void bprobe_die_q (const char *fmt, ...) {
 static int
 bprobe_sym_not_found (void)
 {
-  fprintf (stderr, "bprobe: error: symbol not found\n");
+  if (bprobe_debug >= 2)
+    LOG ("bprobe ERROR: symbol not found.");
   return 0;
 }
 
@@ -169,12 +166,36 @@ bprobe_sym_not_found (void)
 
 /* Metadata gathering stuff */
 #ifndef BPROBE_GATHER_METADATA
+
+
+/* When compiling, ignore metadata.
+ */
 #define BPROBE_METADATA(token, value)
+
+/* We really really really require gcc when compiling...
+ */
+#ifndef __GNUC__
+#error You need gcc to run bprobe
+#endif
+
+
 #else /* BPROBE_GATHER_METADATA */
+
+
+/* Export metadata sandwitched in magic tokens, to extract them
+ * from the preprocessor output.
+ */
 #define BPROBE_MAGIC_BEGIN(token)	{{token{X
 #define BPROBE_MAGIC_END(token)		X}token}}
 #define BPROBE_METADATA(token, value)	BPROBE_MAGIC_BEGIN(token){value}BPROBE_MAGIC_END(token)
+
+/* A symbol we check in the output to make sure preprocessor did
+ * its job...
+ */
 BPROBE_JOIN (BPROBE_MA, GIC_TOKEN)
+
+
 #endif /* BPROBE_GATHER_METADATA */
+
 
 #endif /* BPROBE_PRIVATE_H */
