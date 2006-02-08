@@ -1,9 +1,14 @@
 2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
 
+	* probes/fontconfig.probe, pango-break.probe: Add magic opening
+	line to call bprobe.py on self and run command.
+
+2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+
 	* bprobe.py: Add --run.
 
 	* probes/pango-unknown_glyphs.probe: Add magic opening line to
-	call bprobe.py on self, if runned in the shell.
+	call bprobe.py to run self, if runned in the shell.
 
 2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
 

@@ -1,4 +1,4 @@
-/* vim:set filetype=c: -*-mode:c-*-*/
+/*usr/bin/env bprobe.py $0 -- "$@"; exit # vim:set filetype=c: -*-mode:c-*-*/
 
 #include <fontconfig/fontconfig.h>
 
