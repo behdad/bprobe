@@ -1,5 +1,12 @@
 2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
 
+	* bprobe.py: Add --run.
+
+	* probes/pango-unknown_glyphs.probe: Add magic opening line to
+	call bprobe.py on self, if runned in the shell.
+
+2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+
 	* bprobe.h, bprobe-private.h, bprobe.py: Define MAIN and --main.
 
 2006-02-8  Behdad Esfahbod  <behdad@gnome.org>

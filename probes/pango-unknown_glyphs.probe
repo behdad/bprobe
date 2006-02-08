@@ -1,4 +1,4 @@
-/* vim:set filetype=c: -*-mode:c-*-*/
+/*usr/bin/env bprobe.py -r $0 -- "$@"; exit # vim:set filetype=c: -*-mode:c-*-*/
 
 #define PANGO_ENABLE_ENGINE 1
 #include <pango/pangofc-font.h>

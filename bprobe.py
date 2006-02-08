@@ -68,9 +68,9 @@ def get_metadata (probe, metadata = None, standalone = False):
 	bprobe_h = os.path.join (include_dir, 'bprobe.h')
 	bprobe_private_h = os.path.join (include_dir, 'bprobe-private.h')
 	if not os.path.isfile (bprobe_h):
-		fail ('bprobe.h not found')
+		__fail ('bprobe.h not found')
 	if not os.path.isfile (bprobe_private_h):
-		fail ('bprobe-private.h not found')
+		__fail ('bprobe-private.h not found')
 
 	# Construct the preprocessor command.
 	#
@@ -157,7 +157,7 @@ def compile (infile, outfile, standalone = False):
 	# Chmod it back from executable, if not standalone.
 	#
 	if not standalone:
-		os.chmod (outfile, os.stat (infile).st_mode)
+		os.chmod (outfile, os.stat (infile).st_mode & 0644)
 
 
 
@@ -234,34 +234,43 @@ def run (probes, cmd_args, forced = False, standalone = False, shared = True):
 	if standalone:
 		# Compile standalones first.
 		#
-		[get_compiled (probe, forced, True) for probe in probes]
+		probes_main = [get_compiled (probe, forced, True) for probe in probes]
 
 	if shared:
 
 		# Get .so files for probes.
 		#
-		probes = [get_compiled (probe, forced, False) for probe in probes]
+		probes_so = [get_compiled (probe, forced, False) for probe in probes]
 
-		# If command set, run it.
-		if cmd_args:
+
+	# If command set, run it.
+	if cmd_args:
+
+		if standalone and cmd_args[0] == probes[0]:
+
+			# Running aprobe
+			#
+			cmd_args[0] = probes_main[0]
+
+		elif shared:
 
 			# Append $LD_PRELOAD.
 			#
 			ld_preload = os.getenv ('LD_PRELOAD')
-			probe_preload = ' '.join (probes)
+			probe_preload = ' '.join (probes_so)
 			if ld_preload:
 				probe_preload += ' ' + ld_preload
 			if probe_preload:
 				os.putenv ('LD_PRELOAD', probe_preload)
 
-			cmd = cmd_args[0]
-			try:
-				os.execvp (cmd, cmd_args)
-			except OSError, e:
-				__fail ("%s: %s" % (cmd, e.strerror))
+		else:
+			__fail ('cannot run command without compiled probes')
 
-	elif cmd_args:
-		__fail ('cannot run command with standalone probes')
+		cmd = cmd_args[0]
+		try:
+			os.execvp (cmd, cmd_args)
+		except OSError, e:
+			__fail ("%s: %s" % (cmd, e.strerror))
 
 
 exitcode = 126
@@ -271,29 +280,32 @@ verbose = False
 
 def main (args):
 
-	"""Usage: bprobe [OPTION]... [PROBE]... -- [CMD [ARGS]...]
+	"""Usage: bprobe [OPTION]... [PROBE]... -- [CMD] [ARG]...
 Run command with one or more probes set.
 
   -h, --help        Show this usage info
   -c, --compile     Compile probes (default action)
   -m, --main        Make standalone applications from probes.  This changes
-                    the default action. Use --compile to compile probes still.
+                    the default action. Use --compile to compile probes still
   -f, --force       Force recompilation even if outputs are up to date
+  -r, --run         Like --main, but also runs the first probe, possibly
+                    with arguments
   -v, --verbose     Be a bit more talkative
 
 Report bugs to <behdad@gnome.org>"""
 
 	# Initialized include dir, etc.
 	#
-	global dir, include_dir
-	dirname = os.path.dirname (args[0])
+	global include_dir
+	dirname = os.path.dirname (os.path.realpath (args[0]))
 	if not include_dir:
 		include_dir = dirname
 	del args[0]
 
 	forced = False
-	standalone = False
 	shared = False
+	standalone = False
+	run_main = False
 
 	# Parse options.
 	#
@@ -301,7 +313,8 @@ Report bugs to <behdad@gnome.org>"""
 		print >>sys.stderr, main.__doc__
 		sys.exit (exitcode)
 	try:
-		opts, args = getopt.getopt (args, 'hcmvVf', ['help', 'compile', 'main', 'verbose', 'force'])
+		opts, args = getopt.getopt (args, 'cfhmrvV', \
+		             ['help', 'compile', 'main', 'run', 'verbose', 'force'])
 	except getopt.GetoptError, e:
 		__fail (e)
 	for opt, value in opts:
@@ -312,6 +325,9 @@ Report bugs to <behdad@gnome.org>"""
 			shared = True
 		elif opt in ['-m', '--main']:
 			standalone = True
+		elif opt in ['-r', '--run']:
+			standalone = True
+			run_main = True
 		elif opt in ['-v', '-V', '--verbose']:
 			global verbose
 			verbose = True
@@ -331,7 +347,10 @@ Report bugs to <behdad@gnome.org>"""
 		cmd_args = args[i+1:]
 	else:
 		probes = args
-		cmd_args = None
+		cmd_args = []
+
+	if run_main:
+		cmd_args.insert (0, probes[0])
 	
 	# Run!
 	#
