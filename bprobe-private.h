@@ -226,7 +226,8 @@ bprobe_dump_core (void)
       char pid[10];
       snprintf (pid, sizeof (pid), "%d", BPROBE_PID);
       execlp ("gcore", "bprobe_dump_core", pid, NULL);
-      BPROBE_DIE ("bprobe ERROR: running gcore failed.");
+      if (bprobe_debug >= 1)
+        BPROBE_DIE ("bprobe CRITICAL: running gcore failed.");
     }
 }
 
@@ -240,7 +241,8 @@ bprobe_stack_trace (void)
       close (1);
       dup2 (2, 1);
       execlp ("gstack", "bprobe_stack_trace", pid, NULL);
-      BPROBE_DIE ("bprobe ERROR: running gstack failed.");
+      if (bprobe_debug >= 1)
+        BPROBE_DIE ("bprobe CRITICAL: running gstack failed.");
     }
 }
 
@@ -255,7 +257,8 @@ bprobe_attach_debugger (void)
       snprintf (exe, sizeof (exe), "/proc/%s/exe", pid);
       execlp ("gdb", "bprobe_attach_debugger", "-nw", exe, pid, NULL);
       kill (bprobe_pid, SIGCHLD);
-      BPROBE_DIE ("bprobe ERROR: running gdb failed.");
+      if (bprobe_debug >= 1)
+        BPROBE_DIE ("bprobe ERROR: running gdb failed.");
     }
 }
 
