@@ -1,5 +1,9 @@
 2006-02-12  Behdad Esfahbod  <behdad@gnome.org>
 
+	* bprobe.h, bprobe-private.h: Make PID accessible everywhere.
+
+2006-02-12  Behdad Esfahbod  <behdad@gnome.org>
+
 	* bprobe.h, bprobe-private.h: Implement DUMP_CORE, SPAWN_SYNC,
 	SPAWN_ASYNC, and SPAWN_ASYNC_WAIT.
 

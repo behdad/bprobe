@@ -130,8 +130,8 @@
 #define MAIN			BPROBE_MAIN
 
 
-/* The pid of the main process being probed.  Should be
- * used inside spawned blocks only.
+/* The pid of the main process being probed.  Can be
+ * used inside spawned blocks too.
  */
 #define PID			BPROBE_PID
 

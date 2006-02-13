@@ -28,7 +28,7 @@
 #define BPROBE_MAIN		BPROBE_PROBE int main
 #endif
 
-#define BPROBE_PID		(0+bprobe_pid)
+#define BPROBE_PID		(bprobe_pid ? bprobe_pid : (bprobe_pid = getpid()))
 #define BPROBE_SPAWN_SYNC	BPROBE_SPAWN (1, 0)
 #define BPROBE_SPAWN_ASYNC	BPROBE_SPAWN (0, 0)
 #define BPROBE_SPAWN_ASYNC_WAIT	BPROBE_SPAWN (0, 1)
