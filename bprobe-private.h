@@ -238,12 +238,15 @@ bprobe_attach_debugger (void)
 	}
       else
         {
-          sleep (1);
 	  kill (getpid (), SIGKILL);
 	}
     }
   else
-    waitpid (child_pid, NULL, 0);
+    {
+       waitpid (child_pid, NULL, 0);
+       /* Wait for the debugger to attach */
+       wait (NULL);
+     }
 }
 
 
