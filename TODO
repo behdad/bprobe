@@ -1,4 +1,5 @@
 Implement DEPENDS(list), where marks other probes as library
 dependencies of a probe, but it's a bit hard to get it right,
 as running a compiled probe (that you may not have the source
-of) should try to build the deps if they are out of date.
+of) should try to build the deps if they are out of date.  Or
+maybe that's too much to ask...

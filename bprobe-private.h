@@ -258,7 +258,7 @@ bprobe_attach_debugger (void)
       execlp ("gdb", "bprobe_attach_debugger", "-nw", exe, pid, NULL);
       kill (bprobe_pid, SIGCHLD);
       if (bprobe_debug >= 1)
-        BPROBE_DIE ("bprobe ERROR: running gdb failed.");
+        BPROBE_DIE ("bprobe CRITICAL: running gdb failed.");
     }
 }
 
