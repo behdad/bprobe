@@ -14,6 +14,7 @@ guint       pango_fc_font_get_glyph         (PangoFcFont *font,
   if (!font)
     {
       STACK_TRACE ();
+      /* DUMP_CORE (); */
       /* ATTACH_DEBUGGER (); */
     }
     

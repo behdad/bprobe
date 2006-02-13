@@ -28,6 +28,11 @@
 #define BPROBE_MAIN		BPROBE_PROBE int main
 #endif
 
+#define BPROBE_PID		(0+bprobe_pid)
+#define BPROBE_SPAWN_SYNC	BPROBE_SPAWN (1, 0)
+#define BPROBE_SPAWN_ASYNC	BPROBE_SPAWN (0, 0)
+#define BPROBE_SPAWN_ASYNC_WAIT	BPROBE_SPAWN (0, 1)
+#define BPROBE_DUMP_CORE	bprobe_dump_core
 #define BPROBE_STACK_TRACE	bprobe_stack_trace
 #define BPROBE_ATTACH_DEBUGGER	bprobe_attach_debugger
 
@@ -78,6 +83,22 @@
 	BPROBE_JOIN(_bprobe_##name##_at_line_,__LINE__) (void)
 
 
+#define BPROBE_SPAWN(_sync, _wait)					\
+	if (bprobe_pid = getpid (), (bprobe_child_pid = fork ()))	\
+	  {								\
+	    waitpid (bprobe_child_pid, NULL, 0);			\
+	    if (_wait)							\
+	      wait (NULL);						\
+	  }								\
+	else if (putenv ((char *) "LD_PRELOAD="),			\
+		 (bprobe_child_pid = fork ()))				\
+	  {								\
+	    if (_sync)							\
+	      waitpid (bprobe_child_pid, NULL, 0);			\
+	    kill (getpid (), SIGKILL);					\
+	  }								\
+	else
+
 
 /* Probes should only export symbols marked as PROBE */
 
@@ -112,11 +133,19 @@
 /* Prototypes */
 
 BPROBE_ATTRIBUTE (unused)
+static int bprobe_pid;
+
+BPROBE_ATTRIBUTE (unused)
+static int bprobe_child_pid;
+
+BPROBE_ATTRIBUTE (unused)
 static int bprobe_debug = 1;
 
 BPROBE_ATTRIBUTE (unused)
 static int bprobe_sym_not_found (void);
 
+BPROBE_ATTRIBUTE (unused)
+static void bprobe_dump_core (void);
 BPROBE_ATTRIBUTE (unused)
 static void bprobe_stack_trace (void);
 BPROBE_ATTRIBUTE (unused)
@@ -190,63 +219,44 @@ bprobe_sym_not_found (void)
 }
 
 static void
+bprobe_dump_core (void)
+{
+  BPROBE_SPAWN_SYNC
+    {									
+      char pid[10];
+      snprintf (pid, sizeof (pid), "%d", BPROBE_PID);
+      execlp ("gcore", "bprobe_dump_core", pid, NULL);
+      BPROBE_DIE ("bprobe ERROR: running gcore failed.");
+    }
+}
+
+static void
 bprobe_stack_trace (void)
 {
-  int child_pid;
-  char pid[10];
-  snprintf (pid, sizeof (pid), "%d", getpid ());
-
-  child_pid = fork ();
-  if (!child_pid)
-    {
-      child_pid = fork ();
-      if (!child_pid)
-        {
-	  putenv ((char *)"LD_PRELOAD=");
-          close (1);
-          dup2 (2, 1);
-          execlp ("gstack", "gstack", pid, NULL);
-          BPROBE_DIE ("bprobe ERROR: running gstack failed.");
-	}
-      else
-        {
-          waitpid (child_pid, NULL, 0);
-	  kill (getpid (), SIGKILL);
-	}
+  BPROBE_SPAWN_SYNC
+    {									
+      char pid[10];
+      snprintf (pid, sizeof (pid), "%d", BPROBE_PID);
+      close (1);
+      dup2 (2, 1);
+      execlp ("gstack", "bprobe_stack_trace", pid, NULL);
+      BPROBE_DIE ("bprobe ERROR: running gstack failed.");
     }
-  else
-    waitpid (child_pid, NULL, 0);
 }
 
 static void
 bprobe_attach_debugger (void)
 {
-  int child_pid;
-  char pid[10];
-  snprintf (pid, sizeof (pid), "%d", getpid ());
-
-  child_pid = fork ();
-  if (!child_pid)
+  BPROBE_SPAWN_ASYNC_WAIT
     {
-      if (!fork ())
-        {
-          char exe[64];
-          snprintf (exe, sizeof (exe), "/proc/%s/exe", pid);
-	  putenv ((char *)"LD_PRELOAD=");
-          execlp ("gdb", "gdb", "-nw", exe, pid, NULL);
-          BPROBE_DIE ("bprobe ERROR: running gdb failed.");
-	}
-      else
-        {
-	  kill (getpid (), SIGKILL);
-	}
+      char pid[10];
+      char exe[64];
+      snprintf (pid, sizeof (pid), "%d", BPROBE_PID);
+      snprintf (exe, sizeof (exe), "/proc/%s/exe", pid);
+      execlp ("gdb", "bprobe_attach_debugger", "-nw", exe, pid, NULL);
+      kill (bprobe_pid, SIGCHLD);
+      BPROBE_DIE ("bprobe ERROR: running gdb failed.");
     }
-  else
-    {
-       waitpid (child_pid, NULL, 0);
-       /* Wait for the debugger to attach */
-       wait (NULL);
-     }
 }
 
 

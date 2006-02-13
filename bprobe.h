@@ -130,6 +130,34 @@
 #define MAIN			BPROBE_MAIN
 
 
+/* The pid of the main process being probed.  Should be
+ * used inside spawned blocks only.
+ */
+#define PID			BPROBE_PID
+
+/* Spawn the code in the following block in a separate
+ * process and wait for it to finish.  The code in the
+ * block must exit.
+ */
+#define SPAWN_SYNC		BPROBE_SPAWN_SYNC
+
+/* Spawn the code in the following block in a separate
+ * process and continue.  The code in the block must exit.
+ */
+#define SPAWN_ASYNC		BPROBE_SPAWN_ASYNC
+
+/* Spawn the code in the following block in a separate
+ * process and continue after receiving a signal.
+ * The code must in the block must exit and must the
+ * main process (accessible as BPROBE_PID) before exiting.
+ */
+#define SPAWN_ASYNC_WAIT	BPROBE_SPAWN_ASYNC_WAIT
+
+
+/* Dump core and continue.
+ */
+#define DUMP_CORE()		BPROBE_DUMP_CORE ()
+
 /* Dump an stack trace to stderr.
  */
 #define STACK_TRACE()		BPROBE_STACK_TRACE ()
@@ -137,6 +165,7 @@
 /* Attach a debugger.
  */
 #define ATTACH_DEBUGGER()	BPROBE_ATTACH_DEBUGGER ()
+
 
 /* Log a message to stderr, printf style.
  */
