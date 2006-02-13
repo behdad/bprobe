@@ -130,11 +130,19 @@
 #define MAIN			BPROBE_MAIN
 
 
-/* Log a message to stderr, printf style
+/* Dump an stack trace to stderr.
+ */
+#define STACK_TRACE()		BPROBE_STACK_TRACE ()
+
+/* Attach a debugger.
+ */
+#define ATTACH_DEBUGGER()	BPROBE_ATTACH_DEBUGGER ()
+
+/* Log a message to stderr, printf style.
  */
 #define LOG			BPROBE_LOG
 
-/* Die with a message to stderr, printf style
+/* Die with a message to stderr, printf style.
  */
 #define DIE			BPROBE_DIE
 

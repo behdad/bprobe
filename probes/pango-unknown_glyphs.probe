@@ -11,6 +11,12 @@ PROBE
 guint       pango_fc_font_get_glyph         (PangoFcFont *font,
                                              gunichar wc)
 {
+  if (!font)
+    {
+      STACK_TRACE ();
+      /* ATTACH_DEBUGGER (); */
+    }
+    
   return SUPER(pango_fc_font_get_unknown_glyph) (font, wc);
 }
 

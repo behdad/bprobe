@@ -1,20 +1,28 @@
-2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+2006-02-12  Behdad Esfahbod  <behdad@gnome.org>
+
+	* bprobe.h, bprobe-private.h: Implement STACK_TRACE and
+	ATTACH_DEBUGGER.
+
+	* probes/pango-unknown_glyphs.probe: Dump an stack trace if
+	font is NULL.
+
+2006-02-08  Behdad Esfahbod  <behdad@gnome.org>
 
 	* probes/fontconfig.probe, pango-break.probe: Add magic opening
 	line to call bprobe.py on self and run command.
 
-2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+2006-02-08  Behdad Esfahbod  <behdad@gnome.org>
 
 	* bprobe.py: Add --run.
 
 	* probes/pango-unknown_glyphs.probe: Add magic opening line to
 	call bprobe.py to run self, if runned in the shell.
 
-2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+2006-02-08  Behdad Esfahbod  <behdad@gnome.org>
 
 	* bprobe.h, bprobe-private.h, bprobe.py: Define MAIN and --main.
 
-2006-02-8  Behdad Esfahbod  <behdad@gnome.org>
+2006-02-08  Behdad Esfahbod  <behdad@gnome.org>
 
 	* bprobe.h (SUPER, FUNC): Improve docs.
 
@@ -26,13 +34,13 @@
 
 	* TODO: Add DEPENDS(list).
 
-2006-02-7  Behdad Esfahbod  <behdad@gnome.org>
+2006-02-07  Behdad Esfahbod  <behdad@gnome.org>
 
 	* bprobe.py: Do not try to unlink if the file is not there.
 
 	* probes/fontconfig.probe: Link to fontconfig, as we call
 	FcPatternPrint directly.
 
-2006-02-7  Behdad Esfahbod  <behdad@gnome.org>
+2006-02-07  Behdad Esfahbod  <behdad@gnome.org>
 
 	* Initial import.

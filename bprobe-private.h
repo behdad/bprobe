@@ -21,11 +21,15 @@
 
 #define BPROBE_BEGIN		BPROBE_UNIQUE_ATTRIBUTED_FUNC (constructor, begin)
 #define BPROBE_END		BPROBE_UNIQUE_ATTRIBUTED_FUNC (destructor,  end)
+
 #ifdef BPROBE
 #define BPROBE_MAIN		BPROBE_ATTRIBUTE (unused) static int bprobe_main
 #else
 #define BPROBE_MAIN		BPROBE_PROBE int main
 #endif
+
+#define BPROBE_STACK_TRACE	bprobe_stack_trace
+#define BPROBE_ATTACH_DEBUGGER	bprobe_attach_debugger
 
 #define BPROBE_LOG		bprobe_log
 #define BPROBE_DIE		bprobe_die
@@ -49,7 +53,7 @@
 	  if (!_bprobe_sym_orig) {					\
 	    if (err && bprobe_debug >= 3 &&				\
 	        strcmp (__func__, _bprobe_func))			\
-	      LOG_FUNC ("bprobe WARNING:\n"				\
+	      BPROBE_LOG_FUNC ("bprobe WARNING:\n"			\
 			"Looked up symbol '%s' is different\n"		\
 			"from enclosing function name '%s'.\n"		\
 			"This may not be what you mean.\n",		\
@@ -58,7 +62,7 @@
 	    if (!_bprobe_sym_orig) {					\
 	      _bprobe_sym_orig = (_bprobe_type) bprobe_sym_not_found;	\
 	      if (bprobe_debug >= 1)					\
-	        LOG_FUNC ("bprobe CRITICAL:\n"				\
+	        BPROBE_LOG_FUNC ("bprobe CRITICAL:\n"			\
 	      		  "Probe symbol '%s' not found\n"		\
 			  "A function returning zero substituted.\n",	\
 			  _bprobe_func);				\
@@ -86,6 +90,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <signal.h>
 /* Has got to work a bit hard to get RTLD_NEXT defined, as
  * user headers may already have imported dlfcn.h,
  * But it seems to be harmless so far...
@@ -104,7 +115,12 @@ BPROBE_ATTRIBUTE (unused)
 static int bprobe_debug = 1;
 
 BPROBE_ATTRIBUTE (unused)
-static int bprobe_sym_not_found(void);
+static int bprobe_sym_not_found (void);
+
+BPROBE_ATTRIBUTE (unused)
+static void bprobe_stack_trace (void);
+BPROBE_ATTRIBUTE (unused)
+static void bprobe_attach_debugger (void);
 
 BPROBE_ATTRIBUTE (unused)
 static void bprobe_log   (const char *fmt, ...);
@@ -128,7 +144,15 @@ static void bprobe_die_q (const char *fmt, ...);
 /* Function implementations */
 
 
-#include <stdarg.h>
+#ifndef NULL
+#define NULL ((void *)0)
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
 
 #define BPROBE_ARGLIST		va_list ap
 #define BPROBE_PROMPT		fprintf (stderr, "BP| ")
@@ -161,11 +185,66 @@ static int
 bprobe_sym_not_found (void)
 {
   if (bprobe_debug >= 2)
-    LOG ("bprobe ERROR: symbol not found.");
+    BPROBE_LOG ("bprobe ERROR: symbol not found.");
   return 0;
 }
 
+static void
+bprobe_stack_trace (void)
+{
+  int child_pid;
+  char pid[10];
+  snprintf (pid, sizeof (pid), "%d", getpid ());
 
+  child_pid = fork ();
+  if (!child_pid)
+    {
+      child_pid = fork ();
+      if (!child_pid)
+        {
+	  putenv ((char *)"LD_PRELOAD=");
+          close (1);
+          dup2 (2, 1);
+          execlp ("gstack", "gstack", pid, NULL);
+          BPROBE_DIE ("bprobe ERROR: running gstack failed.");
+	}
+      else
+        {
+          waitpid (child_pid, NULL, 0);
+	  kill (getpid (), SIGKILL);
+	}
+    }
+  else
+    waitpid (child_pid, NULL, 0);
+}
+
+static void
+bprobe_attach_debugger (void)
+{
+  int child_pid;
+  char pid[10];
+  snprintf (pid, sizeof (pid), "%d", getpid ());
+
+  child_pid = fork ();
+  if (!child_pid)
+    {
+      if (!fork ())
+        {
+          char exe[64];
+          snprintf (exe, sizeof (exe), "/proc/%s/exe", pid);
+	  putenv ((char *)"LD_PRELOAD=");
+          execlp ("gdb", "gdb", "-nw", exe, pid, NULL);
+          BPROBE_DIE ("bprobe ERROR: running gdb failed.");
+	}
+      else
+        {
+          sleep (1);
+	  kill (getpid (), SIGKILL);
+	}
+    }
+  else
+    waitpid (child_pid, NULL, 0);
+}
 
 
 
