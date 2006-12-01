@@ -4,7 +4,7 @@
 #include <pango/pango.h>
 
 #include "bprobe.h"
-PKG_CONFIG_CFLAGS (pangoft2)
+PKG_CONFIG_CFLAGS (pango)
 DEBUG (2)
 
 int n = 0;
