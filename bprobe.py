@@ -248,7 +248,7 @@ def run (probes, cmd_args, forced = False, standalone = False, shared = True):
 
 		if standalone and cmd_args[0] == probes[0]:
 
-			# Running aprobe
+			# Running a probe
 			#
 			cmd_args[0] = probes_main[0]
 
