@@ -81,19 +81,19 @@
 
 
 /* Mark a function as a probe.
- * Should come just before the function definition/declaration.
+ * Should come right before the function definition/declaration.
  */
 #define PROBE			BPROBE_PROBE
 
 /* Accessor to call (or get) a function that is already
  * prototyped.  The symbol is resolved dynamically and
- * when the expression is evaluated, so it cannot make
+ * when the expression is evaluated, and it will NOT trigger
  * a run-time linker error.  Instead, if the symbol is
  * not found, a critical warning is printed and the
  * function 'int bprobe_sym_not_found (void)' is
- * returned, which is a function always returns 0.
+ * returned, which is a function always returning 0.
  * You can compare the returned value of SUPER with this
- * symbol to check whether this has happened.
+ * symbol to check whether a failure has happened.
  *
  * This is most useful to call the default handler of a
  * probe, or call from other probes in the same bprobe module
@@ -115,7 +115,7 @@
  */
 #define BEGIN			BPROBE_BEGIN
 
-/* A block of code that should run on program shutdown.
+/* A block of code that should run on normal program termination.
  * There may be many of them.
  */
 #define END			BPROBE_END
@@ -148,7 +148,7 @@
 
 /* Spawn the code in the following block in a separate
  * process and continue after receiving a signal.
- * The code must in the block must exit and must the
+ * The code must in the block must exit and must kill the
  * main process (accessible as BPROBE_PID) before exiting.
  */
 #define SPAWN_ASYNC_WAIT	BPROBE_SPAWN_ASYNC_WAIT
@@ -187,11 +187,11 @@
 
 
 
-/* Make a string out of the expantion of a token.
+/* Make a string out of the expansion of a token.
  */
 #define STRINGIZE(x)		BPROBE_STRINGIZE(x)
 
-/* Joins two tokens to form one token.
+/* Join two tokens to form one.
  * Works when one of the arguments is __LINE__ too.
  */
 #define JOIN(x,y)		BPROBE_JOIN(x)

@@ -1,5 +1,9 @@
 2006-12-01  Behdad Esfahbod  <behdad@gnome.org>
 
+	* bprobe.h: Fix typos.  Wow, welcome Planet GNOME hackers!
+
+2006-12-01  Behdad Esfahbod  <behdad@gnome.org>
+
 	* bprobe-private.h: Add format(printf) attributes to some functions.
 
 	* probes/pango-glyph_extents.probe: New sample probe.
