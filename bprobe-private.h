@@ -77,6 +77,12 @@
 
 #define BPROBE_ATTRIBUTE(attr)						\
  	__attribute__((attr))
+#define BPROBE_ATTRIBUTE_UNUSED						\
+	BPROBE_ATTRIBUTE (unused)
+#define BPROBE_ATTRIBUTE_NORETURN					\
+	BPROBE_ATTRIBUTE (noreturn)
+#define BPROBE_ATTRIBUTE_PRINTF						\
+	BPROBE_ATTRIBUTE (format (printf, 1, 2))
 
 #define BPROBE_UNIQUE_ATTRIBUTED_FUNC(attr, name)			\
 	BPROBE_ATTRIBUTE (attr) static void				\
@@ -132,37 +138,42 @@
 
 /* Prototypes */
 
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
 static int bprobe_pid;
 
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
 static int bprobe_child_pid;
 
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
 static int bprobe_debug = 1;
 
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
 static int bprobe_sym_not_found (void);
 
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
 static void bprobe_dump_core (void);
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
 static void bprobe_stack_trace (void);
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
 static void bprobe_attach_debugger (void);
 
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
+BPROBE_ATTRIBUTE_PRINTF
 static void bprobe_log   (const char *fmt, ...);
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
+BPROBE_ATTRIBUTE_PRINTF
 static void bprobe_log_n (const char *fmt, ...);
-BPROBE_ATTRIBUTE (unused)
+BPROBE_ATTRIBUTE_UNUSED
+BPROBE_ATTRIBUTE_PRINTF
 static void bprobe_log_q (const char *fmt, ...);
 
-BPROBE_ATTRIBUTE (unused)
-BPROBE_ATTRIBUTE (noreturn)
+BPROBE_ATTRIBUTE_UNUSED
+BPROBE_ATTRIBUTE_PRINTF
+BPROBE_ATTRIBUTE_NORETURN
 static void bprobe_die   (const char *fmt, ...);
-BPROBE_ATTRIBUTE (unused)
-BPROBE_ATTRIBUTE (noreturn)
+BPROBE_ATTRIBUTE_UNUSED
+BPROBE_ATTRIBUTE_PRINTF
+BPROBE_ATTRIBUTE_NORETURN
 static void bprobe_die_q (const char *fmt, ...);
 
 

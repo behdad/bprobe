@@ -1,0 +1,72 @@
+/*usr/bin/env bprobe.py $0 -- "$@"; exit # vim:set filetype=c: -*-mode:c-*-*/
+
+#define PANGO_ENABLE_ENGINE 1
+#include <pango/pango.h>
+
+#include "bprobe.h"
+PKG_CONFIG_CFLAGS (pangoft2)
+DEBUG (2)
+
+int n = 0;
+
+PROBE
+PangoLayoutIter*
+pango_layout_get_iter (PangoLayout *layout)
+{
+  PangoLayoutIter *iter;
+  LOG_FUNC ("enter %p", layout);
+  iter = SUPER(pango_layout_get_iter) (layout);
+  LOG_FUNC ("leave %p", layout);
+  return iter;
+}
+
+PROBE
+void
+pango_renderer_draw_layout_line (PangoRenderer    *renderer,
+                                 PangoLayoutLine  *line,
+                                 int               x,
+                                 int               y)
+{
+  LOG_FUNC ("enter %p", line);
+  SUPER(pango_renderer_draw_layout_line) (renderer, line, x, y);
+  LOG_FUNC ("leave %p", line);
+}
+
+PROBE
+void
+pango_renderer_draw_layout (PangoRenderer    *renderer,
+                            PangoLayout      *layout,
+                            int               x,
+                            int               y)
+{
+  LOG_FUNC ("enter %p", layout);
+  SUPER(pango_renderer_draw_layout) (renderer, layout, x, y);
+  LOG_FUNC ("leave %p", layout);
+}
+
+PROBE
+void        pango_glyph_string_extents      (PangoGlyphString *glyphs,
+                                             PangoFont *font,
+                                             PangoRectangle *ink_rect,
+                                             PangoRectangle *logical_rect)
+{
+  LOG_FUNC ("ink %p logical %p", ink_rect, logical_rect);
+//  STACK_TRACE();
+  SUPER(pango_glyph_string_extents) (glyphs, font, ink_rect, logical_rect);
+}
+
+PROBE
+void        pango_font_get_glyph_extents    (PangoFont *font,
+                                             PangoGlyph glyph,
+                                             PangoRectangle *ink_rect,
+                                             PangoRectangle *logical_rect)
+{
+  n++;
+  SUPER(pango_font_get_glyph_extents) (font, glyph, ink_rect, logical_rect);
+}
+
+END
+{
+  if (n)
+    LOG ("pango_font_get_glyph_extents called %d times.", n);
+}
