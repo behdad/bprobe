@@ -22,7 +22,7 @@
 #define BPROBE_BEGIN		BPROBE_UNIQUE_ATTRIBUTED_FUNC (constructor, begin)
 #define BPROBE_END		BPROBE_UNIQUE_ATTRIBUTED_FUNC (destructor,  end)
 
-#ifdef BPROBE
+#ifdef  BPROBE
 #define BPROBE_MAIN		BPROBE_ATTRIBUTE (unused) static int bprobe_main
 #else
 #define BPROBE_MAIN		BPROBE_PROBE int main
@@ -35,6 +35,7 @@
 #define BPROBE_DUMP_CORE	bprobe_dump_core
 #define BPROBE_STACK_TRACE	bprobe_stack_trace
 #define BPROBE_ATTACH_DEBUGGER	bprobe_attach_debugger
+#define BPROBE_BREAK_POINT	bprobe_break_point
 
 #define BPROBE_LOG		bprobe_log
 #define BPROBE_DIE		bprobe_die
@@ -156,6 +157,8 @@ BPROBE_ATTRIBUTE_UNUSED
 static void bprobe_stack_trace (void);
 BPROBE_ATTRIBUTE_UNUSED
 static void bprobe_attach_debugger (void);
+BPROBE_ATTRIBUTE_UNUSED
+static void bprobe_break_point (void);
 
 BPROBE_ATTRIBUTE_UNUSED
 BPROBE_ATTRIBUTE_PRINTF
@@ -273,6 +276,11 @@ bprobe_attach_debugger (void)
     }
 }
 
+static void
+bprobe_break_point (void)
+{
+  raise (SIGTRAP);
+}
 
 
 /* Metadata gathering stuff */

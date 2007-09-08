@@ -166,6 +166,10 @@
  */
 #define ATTACH_DEBUGGER()	BPROBE_ATTACH_DEBUGGER ()
 
+/* Insert a break point if the process is bing debugged.
+ */
+#define BREAK_POINT()		BPROBE_BREAK_POINT ()
+
 
 /* Log a message to stderr, printf style.
  */
