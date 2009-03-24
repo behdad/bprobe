@@ -11,7 +11,7 @@ version 2 of the License, or (at your option) any later version.
 See the GNU Library General Public License for more details.
 """
 
-import sys, getopt, os, os.path, re
+import sys, getopt, os, os.path, subprocess, re
 
 
 def __log (message):
@@ -84,11 +84,13 @@ def get_metadata (probe, metadata = None, standalone = False):
 	#
 	__log ("%s: preprocessing" % probe)
 	__log_v (' '.join (cmd))
-	(inn, out, err) = os.popen3 (cmd)
-	text = out.read ()
+	PIPE = subprocess.PIPE
+	p = subprocess.Popen (cmd, stdout=PIPE, stderr=PIPE)
+	text = p.stdout.read ()
 	if not text:
-		__fail ('%s: preprocessing failed using %s' % (probe, cpp))
-	
+		__fail ('%s: preprocessing failed using %s.  preprocessor error:\n%s' %
+			(probe, cpp, p.stderr.read ()))
+
 	# Extract metadata from the preprocessor output.
 	#
 	return __extract_metadata (metadata, text)
@@ -146,10 +148,12 @@ def compile (infile, outfile, standalone = False):
 	#
 	__log ("%s: compiling" % infile)
 	__log_v (cmd)
-	(inn, out, err) = os.popen3 (cmd, 'r')
-	errs = err.read ()
+	PIPE = subprocess.PIPE
+	p = subprocess.Popen (cmd, stdout=PIPE, stderr=PIPE, shell=True)
+	errs = p.stderr.read ()
 	if errs:
 		__fail (errs)
+	print p.stdout.read ()
 	
 	if not os.path.isfile (outfile):
 		__fail ("%s: compiler did not produce expected output file" % outfile)
