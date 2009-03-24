@@ -107,10 +107,6 @@
 	else
 
 
-/* Probes should only export symbols marked as PROBE */
-
-#pragma GCC visibility push(hidden)
-
 
 
 /* Headers */
@@ -135,6 +131,11 @@
 #define __USE_GNU 1
 #undef _DLFCN_H
 #include <dlfcn.h>
+
+
+/* Probes should only export symbols marked as PROBE */
+
+#pragma GCC visibility push(hidden)
 
 
 /* Prototypes */
