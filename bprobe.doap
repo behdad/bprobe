@@ -4,7 +4,7 @@
          xmlns:gnome="http://api.gnome.org/doap-extensions#"
          xmlns="http://usefulinc.com/ns/doap#">
 
-  <name xml:lang="en">pango</name>
+  <name xml:lang="en">bprobe</name>
   <shortdesc xml:lang="en">Simple tool to probe shared-library calls</shortdesc>
 
   <maintainer>
